@@ -199,6 +199,8 @@
     const loadingMsg = document.getElementById('loadingMsg');
 
     let selectedIndex = null; // vị trí đang được chọn, dùng chung cho cả 2 khung
+    let audioData = [];
+    let videoData = [];
 
     function buildGrid(container, list) {
       container.innerHTML = '';
@@ -226,6 +228,14 @@
       });
     }
 
+    function openMirrored(list) {
+      if (selectedIndex === null) return;
+      const url = list[selectedIndex];
+      if (url && url !== '#') {
+        window.open(url, '_blank', 'noopener');
+      }
+    }
+
     async function loadLinks() {
       try {
         const res = await fetch(
@@ -242,8 +252,10 @@
         const data = rows[0] || { main_link: '#', audio: [], video: [] };
 
         btnLink.href = data.main_link && data.main_link !== '#' ? data.main_link : '#';
-        buildGrid(gridAudio, data.audio);
-        buildGrid(gridVideo, data.video);
+        audioData = data.audio || [];
+        videoData = data.video || [];
+        buildGrid(gridAudio, audioData);
+        buildGrid(gridVideo, videoData);
         loadingMsg.style.display = 'none';
       } catch (err) {
         console.error(err);
@@ -252,16 +264,19 @@
     }
     loadLinks();
 
-    function togglePanel(panel, btn, otherPanel, otherBtn) {
+    function togglePanel(panel, btn, otherPanel, otherBtn, list) {
       const isOpen = panel.classList.contains('open');
       panel.classList.toggle('open', !isOpen);
       btn.classList.toggle('active', !isOpen);
       otherPanel.classList.remove('open');
       otherBtn.classList.remove('active');
+      if (!isOpen) {
+        openMirrored(list); // vừa mở khung -> tự mở luôn link ở vị trí đã chọn trước đó
+      }
     }
 
-    btnAudio.addEventListener('click', () => togglePanel(panelAudio, btnAudio, panelVideo, btnVideo));
-    btnVideo.addEventListener('click', () => togglePanel(panelVideo, btnVideo, panelAudio, btnAudio));
+    btnAudio.addEventListener('click', () => togglePanel(panelAudio, btnAudio, panelVideo, btnVideo, audioData));
+    btnVideo.addEventListener('click', () => togglePanel(panelVideo, btnVideo, panelAudio, btnAudio, videoData));
   </script>
 
 </body>
