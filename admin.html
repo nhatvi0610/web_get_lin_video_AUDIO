@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trang Admin - Quản Lý Link</title>
+<style>
+  :root {
+    --bg1: #1e1b4b;
+    --bg2: #0f172a;
+    --accent1: #6366f1;
+    --accent2: #ec4899;
+    --accent3: #06b6d4;
+    --text: #f1f5f9;
+    --ok: #22c55e;
+    --warn: #facc15;
+    --err: #f87171;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 16px 80px;
+  }
+
+  h1 {
+    font-size: 1.7rem;
+    margin-bottom: 6px;
+    text-align: center;
+    background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .subtitle {
+    opacity: 0.75;
+    font-size: 0.95rem;
+    margin-bottom: 28px;
+    text-align: center;
+    max-width: 640px;
+  }
+
+  .section {
+    width: 100%;
+    max-width: 640px;
+    margin-bottom: 28px;
+  }
+
+  .section-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    opacity: 0.9;
+  }
+
+  .link-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .link-row input[type="text"] {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.05);
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+
+  .dropzone {
+    width: 100%;
+    max-width: 640px;
+    border: 2px dashed rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.25s ease, background 0.25s ease, transform 0.2s ease;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .dropzone.drag-over {
+    border-color: var(--accent3);
+    background: rgba(6,182,212,0.08);
+    transform: scale(1.01);
+  }
+
+  .dropzone svg { width: 42px; height: 42px; opacity: 0.6; margin-bottom: 10px; }
+
+  .dropzone .main-text { font-size: 1.05rem; font-weight: 600; }
+  .dropzone .sub-text { font-size: 0.85rem; opacity: 0.65; margin-top: 6px; }
+
+  input[type="file"] { display: none; }
+
+  .status {
+    margin-top: 18px;
+    font-size: 0.9rem;
+    min-height: 20px;
+    text-align: center;
+  }
+  .status.ok { color: var(--ok); }
+  .status.warn { color: var(--warn); }
+  .status.err { color: var(--err); }
+
+  .format-hint {
+    max-width: 640px;
+    width: 100%;
+    margin-top: 22px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 16px 18px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    opacity: 0.85;
+  }
+
+  .format-hint code {
+    background: rgba(255,255,255,0.08);
+    padding: 1px 6px;
+    border-radius: 6px;
+  }
+
+  .preview-wrap {
+    width: 100%;
+    max-width: 900px;
+    margin-top: 30px;
+    display: none;
+  }
+
+  .preview-wrap.show { display: block; }
+
+  .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) {
+    .columns { grid-template-columns: 1fr; }
+  }
+
+  .col-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 1rem;
+  }
+  .col-title.audio { color: #38bdf8; }
+  .col-title.video { color: #f472b6; }
+
+  .row-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .row-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+  }
+
+  .row-item .idx {
+    flex: 0 0 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .row-item .lnk {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.85;
+  }
+
+  .row-item.missing .lnk {
+    color: var(--err);
+    opacity: 0.7;
+  }
+  .row-item.missing .idx { background: rgba(248,113,113,0.25); }
+
+  .actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    margin-top: 26px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 14px 26px;
+    border: none;
+    border-radius: 16px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-save {
+    background-image: linear-gradient(135deg, #22c55e, #06b6d4);
+  }
+  .btn-small {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    border-radius: 12px;
+  }
+
+  a.back-link {
+    margin-top: 34px;
+    color: var(--text);
+    opacity: 0.6;
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+  a.back-link:hover { opacity: 1; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+  <h1>Quản Lý Link</h1>
+  <div class="subtitle">
+    Cập nhật link tổng hợp, và kéo thả file <code>.txt</code> chứa 20 link Âm Thanh + 20 link Video.
+    Sau khi bấm <strong>Cập nhật lên web</strong>, trang chính sẽ hiển thị link mới ngay lập tức.
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔗 Link Tải Tổng Hợp</div>
+    <div class="link-row">
+      <input type="text" id="mainLinkInput" placeholder="https://...">
+      <button class="btn btn-save btn-small" id="btnSaveMain">Lưu</button>
+    </div>
+  </div>
+
+  <div class="dropzone" id="dropzone">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+      <path d="M12 16V4M12 4l-4 4M12 4l4 4" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <div class="main-text">Kéo file .txt vào đây hoặc bấm để chọn</div>
+    <div class="sub-text">Dòng 1–20: link Âm Thanh &nbsp;|&nbsp; Dòng 21–40: link Video</div>
+    <input type="file" id="fileInput" accept=".txt">
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="format-hint">
+    <strong>Định dạng file .txt:</strong> mỗi dòng một link, đúng thứ tự, tổng cộng 40 dòng.<br>
+    Dòng trống sẽ được bỏ qua. Nếu thiếu link, mục đó sẽ giữ nguyên là <code>#</code> (web chính sẽ tự làm mờ mục đó).
+  </div>
+
+  <div class="preview-wrap" id="previewWrap">
+    <div class="columns">
+      <div>
+        <div class="col-title audio">🎧 Âm Thanh (1–20)</div>
+        <div class="row-list" id="listAudio"></div>
+      </div>
+      <div>
+        <div class="col-title video">🎬 Video (1–20)</div>
+        <div class="row-list" id="listVideo"></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-save" id="btnPublish">🚀 Cập nhật lên web</button>
+    </div>
+  </div>
+
+  <a href="index.html" class="back-link">← Quay lại trang chính</a>
+
+  <script>
+    // ====== CẤU HÌNH SUPABASE ======
+    const SUPABASE_URL = "https://habcafhqeoqqgndiyyke.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_cwB_1BQUR8JIzfvjHXfhgQ_1s0BnEfq";
+    // ================================
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const statusEl = document.getElementById('status');
+    const previewWrap = document.getElementById('previewWrap');
+    const listAudio = document.getElementById('listAudio');
+    const listVideo = document.getElementById('listVideo');
+    const btnPublish = document.getElementById('btnPublish');
+    const mainLinkInput = document.getElementById('mainLinkInput');
+    const btnSaveMain = document.getElementById('btnSaveMain');
+
+    let currentData = { audio: [], video: [] };
+
+    // ---- Tải dữ liệu hiện tại khi mở trang ----
+    async function loadCurrent() {
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/site_links?id=eq.1&select=*`,
+          { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+        );
+        const rows = await res.json();
+        const data = rows[0];
+        if (data) {
+          mainLinkInput.value = data.main_link && data.main_link !== '#' ? data.main_link : '';
+          if ((data.audio && data.audio.length) || (data.video && data.video.length)) {
+            currentData = { audio: data.audio || [], video: data.video || [] };
+            renderPreview();
+          }
+        }
+      } catch (err) {
+        console.warn('Không tải được dữ liệu hiện tại.', err);
+      }
+    }
+    loadCurrent();
+
+    // ---- Lưu link tổng hợp ----
+    btnSaveMain.addEventListener('click', async () => {
+      const val = mainLinkInput.value.trim() || '#';
+      btnSaveMain.disabled = true;
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/site_links?id=eq.1`,
+          {
+            method: 'PATCH',
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal'
+            },
+            body: JSON.stringify({ main_link: val })
+          }
+        );
+        if (!res.ok) throw new Error(res.status);
+        setStatus('Đã lưu link tổng hợp ✔', 'ok');
+      } catch (err) {
+        setStatus('Lỗi khi lưu link tổng hợp.', 'err');
+      } finally {
+        btnSaveMain.disabled = false;
+      }
+    });
+
+    // ---- Kéo thả / chọn file .txt ----
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, e => {
+        e.preventDefault();
+        dropzone.classList.remove('drag-over');
+      });
+    });
+
+    dropzone.addEventListener('drop', e => {
+      const file = e.dataTransfer.files[0];
+      if (file) handleFile(file);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) handleFile(fileInput.files[0]);
+    });
+
+    function handleFile(file) {
+      if (!file.name.toLowerCase().endsWith('.txt')) {
+        setStatus('Chỉ chấp nhận file .txt', 'err');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => parseText(reader.result);
+      reader.onerror = () => setStatus('Không đọc được file.', 'err');
+      reader.readAsText(file, 'utf-8');
+    }
+
+    function parseText(text) {
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+
+      const audio = lines.slice(0, 20);
+      const video = lines.slice(20, 40);
+
+      while (audio.length < 20) audio.push('#');
+      while (video.length < 20) video.push('#');
+
+      currentData = { audio, video };
+      renderPreview();
+
+      const total = lines.length;
+      if (total >= 40) {
+        setStatus(`Đã đọc ${total} dòng — đủ 20 link Âm Thanh + 20 link Video. Bấm "Cập nhật lên web" để áp dụng.`, 'ok');
+      } else if (total === 0) {
+        setStatus('File rỗng hoặc không đọc được nội dung.', 'err');
+      } else {
+        setStatus(`Chỉ đọc được ${total}/40 dòng — các mục còn thiếu sẽ để tạm là "#".`, 'warn');
+      }
+    }
+
+    function renderPreview() {
+      listAudio.innerHTML = '';
+      listVideo.innerHTML = '';
+      currentData.audio.forEach((link, idx) => listAudio.appendChild(makeRow(idx + 1, link)));
+      currentData.video.forEach((link, idx) => listVideo.appendChild(makeRow(idx + 1, link)));
+      previewWrap.classList.add('show');
+    }
+
+    function makeRow(idx, link) {
+      const row = document.createElement('div');
+      const missing = !link || link === '#';
+      row.className = 'row-item' + (missing ? ' missing' : '');
+      row.innerHTML = `<div class="idx">${idx}</div><div class="lnk">${escapeHtml(link || '#')}</div>`;
+      return row;
+    }
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function setStatus(msg, type) {
+      statusEl.textContent = msg;
+      statusEl.className = 'status ' + (type || '');
+    }
+
+    // ---- Đẩy dữ liệu Âm thanh/Video lên Supabase => web chính cập nhật ngay ----
+    btnPublish.addEventListener('click', async () => {
+      btnPublish.disabled = true;
+      setStatus('Đang cập nhật lên web...', 'warn');
+      try {
+        const res = await fetch(
+          `${SUPABASE_URL}/rest/v1/site_links?id=eq.1`,
+          {
+            method: 'PATCH',
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              Prefer: 'return=minimal'
+            },
+            body: JSON.stringify({ audio: currentData.audio, video: currentData.video })
+          }
+        );
+        if (!res.ok) throw new Error(res.status);
+        setStatus('Đã cập nhật lên web thành công ✔ — mở trang chính để xem ngay.', 'ok');
+      } catch (err) {
+        setStatus('Lỗi khi cập nhật lên web. Kiểm tra lại kết nối Supabase.', 'err');
+      } finally {
+        btnPublish.disabled = false;
+      }
+    });
+  </script>
+
+</body>
+</html>
