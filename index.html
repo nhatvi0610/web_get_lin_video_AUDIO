@@ -134,6 +134,12 @@
     pointer-events: none;
   }
 
+  .grid a.selected {
+    border-color: #facc15;
+    box-shadow: 0 0 0 2px #facc15, 0 6px 16px rgba(250,204,21,0.35);
+    background: rgba(250,204,21,0.12);
+  }
+
   .hint {
     font-size: 0.85rem;
     opacity: 0.7;
@@ -192,6 +198,8 @@
     const gridVideo = document.getElementById('gridVideo');
     const loadingMsg = document.getElementById('loadingMsg');
 
+    let selectedIndex = null; // vị trí đang được chọn, dùng chung cho cả 2 khung
+
     function buildGrid(container, list) {
       container.innerHTML = '';
       (list || []).forEach((url, idx) => {
@@ -201,8 +209,20 @@
         a.textContent = idx + 1;
         a.target = "_blank";
         a.rel = "noopener";
+        a.dataset.idx = idx;
         if (!valid) a.classList.add('disabled');
+        if (selectedIndex === idx) a.classList.add('selected');
+        a.addEventListener('click', () => selectIndex(idx));
         container.appendChild(a);
+      });
+    }
+
+    function selectIndex(idx) {
+      selectedIndex = idx;
+      [gridAudio, gridVideo].forEach(grid => {
+        grid.querySelectorAll('a').forEach(a => {
+          a.classList.toggle('selected', Number(a.dataset.idx) === idx);
+        });
       });
     }
 
